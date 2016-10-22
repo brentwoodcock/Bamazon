@@ -9,12 +9,13 @@ var conn = mysql.createConnection({
     database: "bamazon_db"
 });
 
+// Connect to database
 conn.connect(function(err) {
 	if(err){
 		console.log(err);
 		throw err;
 	}
-
+	// Grab products table from database
 	conn.query('SELECT * FROM products', function(err, res){
 		if(err) throw err;
 		console.log('ID Price($) Product                      ');
@@ -40,14 +41,16 @@ conn.connect(function(err) {
 				message: 'How many would you like to purchase?'
 			}
 		]).then(function(answers) {
-			// console.log(JSON.stringify(answers, null, '  '))
-
-			conn.query('SELECT StockQuantity FROM products WHERE ProductName = ?', answers.product, function(err,res){
+			// Grab information for selected product
+			conn.query('SELECT * FROM products WHERE ProductName = ?', answers.product, function(err,res){
 				if(err) throw err;
+				// Determine if enough is in stock
 				if (res[0].StockQuantity < parseInt(answers.quantity)) {
 					console.log("Sorry, not enough in stock");
 				}else{
 					console.log("Purchase successful!");
+					console.log("Total cost: $" + (res[0].Price * parseInt(answers.quantity)));
+					// Update database
 					conn.query('UPDATE products SET ? WHERE ?', [{
 						StockQuantity: (res[0].StockQuantity - parseInt(answers.quantity))
 					},{
