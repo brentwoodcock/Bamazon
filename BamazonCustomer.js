@@ -17,13 +17,13 @@ conn.connect(function(err) {
 
 	conn.query('SELECT * FROM products', function(err, res){
 		if(err) throw err;
-		console.log('ID   Product               Price($)');
-		console.log('---------------------------------------------');
+		console.log('ID Price($) Product                      ');
+		console.log('-----------------------------------------');
 		var i = 0;
 		var products = [];
 		// Display products for sale
 		while (i < res.length){
-			console.log(res[i].ItemID + '    ' + res[i].ProductName + '    ' + res[i].Price);
+			console.log(res[i].ItemID + '  ' + res[i].Price + '    ' + res[i].ProductName);
 			products.push(res[i].ProductName);
 			i++;
 		}
@@ -40,7 +40,23 @@ conn.connect(function(err) {
 				message: 'How many would you like to purchase?'
 			}
 		]).then(function(answers) {
-			console.log(JSON.stringify(answers, null, '  '))
+			// console.log(JSON.stringify(answers, null, '  '))
+
+			conn.query('SELECT StockQuantity FROM products WHERE ProductName = ?', answers.product, function(err,res){
+				if(err) throw err;
+				if (res[0].StockQuantity < parseInt(answers.quantity)) {
+					console.log("Sorry, not enough in stock");
+				}else{
+					console.log("Purchase successful!");
+					conn.query('UPDATE products SET ? WHERE ?', [{
+						StockQuantity: (res[0].StockQuantity - parseInt(answers.quantity))
+					},{
+						ProductName: answers.product
+					}], function(err, res){
+						if (err) throw err;
+					})
+				}
+			})
 		})
 	});
-});
+})
